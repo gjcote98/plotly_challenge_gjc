@@ -24,7 +24,7 @@ function build(sample)
     d3.json("samples.json").then((dataset) => 
     {
         console.log(dataset);
-        var sampleMetadata = dataset.samples.metadata;
+        var sampleMetadata = dataset.metadata;
 
         var results = sampleMetadata.filter(s=>s.id == sample);
         console.log(results);
@@ -40,59 +40,64 @@ function build(sample)
 
 
 //bar/bubble
-function buildplots(data)
+function buildplots(sample)
 {
-    d3.json("samples.json").then((data) => 
+    d3.json("samples.json").then((dataset) => 
     {
-        console.log(data);
+        console.log(dataset);
+        var samples = dataset.samples;
+        var results = samples.filter(s=>s.id == sample);
+        console.log("results");
+        console.log(results);
+        var graphData = results[0];
+        console.log(graphData);
         
-        var otu_ids = data.otu_ids;
-        var otu_labels = data.otu_labels;
-        var sampleValues = data.sample_values;      
-
-        let barChart=
-        [
-           var barTrace = 
-            {
-                values: sampleValues.slice(0, 10),
-                labels: otu_ids.slice(0, 10),
-                hovertext: otu_labels.slice(0, 10),
-                type: "bar"
-            }
-            var barData = [trace1]    
-            var barLayout = 
-            {
-                title: "Top 10 OTUs",
-                xaxis: {title: "x"},
-                yaxis: {title: "y"}
-            };
-        ];
+        //bar (top 10 OTUs)
+        var sample_values = graphData.sample_values;
+        var otu_ids = graphData.otu_ids;
+        var otu_labels = graphData.otu_labels;
+        
+        var barTrace = 
+        {
+          x: sample_values.slice(0,10).reverse(),
+          y: otu_ids.slice(0,10).map(value=>`OTU ID ${value}`).reverse(),
+          type: "bar",
+          text: otu_labels.slice(0,10).reverse(),
+          orientation: "h"
+        };
+        var barData = [barTrace];
+        var barLayout = 
+        {
+          title: "Bar",
+          xaxis: { title: "Sample Values"},
+        };
+        
         Plotly.newPlot("bar", barData, barLayout);
         
-        let bubbleData = 
-        [
-            {
-              x: otu_ids,
-              y: sampleValues,
-              text: otu_labels,
-              mode: "markers",
-              marker: 
-              {
-                size: sample_values,
-                color: otu_ids,
-                colorscale: "Picnic"
-              }
-            }
-        ];
-  
-        let bubbleLayout = 
+        //bubble
+        var bubbleTrace = 
         {
-            title: "Top 10 OTUs",
-            xaxis: { title: "OTU ID"},
-            yaxis: {title: "y"}
+          x: otu_ids,
+          y: sample_values,
+          mode: "markers",
+          marker: 
+          {
+              color: otu_ids,
+              size: sample_values
+          },
+          text: otu_labels
         };
-    
-        Plotly.plot("bubble", bubbleData, bubbleLayout);
+        var bubbleData = [bubbleTrace];
+        var bubbleLayout = 
+        {
+          title: "Bubble",
+          xaxis: { title: "otu_id"},
+          yaxis: { title: "sample_value"}
+        };
+        Plotly.newPlot("bubble", bubbleData, bubbleLayout);
+
+
+        // //gauge (optional)
   
     });
 };
@@ -109,4 +114,3 @@ function optionChanged(sample)
 //f2 create summary stats - build()
 //f3 bar/bubble - buildplots()
 //f4 read changes and change f1 f2 f3 - optionChanged
-
